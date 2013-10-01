@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -40,6 +41,16 @@ namespace SumToTen
             if (answer[0] >= 0 && answer[1] >= 0)
                 Console.WriteLine("[FAST][TA2] The values at indices {0} and {1} are the first pair that sum to 10", answer[0], answer[1]);
 
+            answer = SumToTen_Fastest(testArray, testArray.Length);
+
+            if (answer[0] >= 0 && answer[1] >= 0)
+                Console.WriteLine("[FASTEST][TA1] The values at indices {0} and {1} are the first pair that sum to 10", answer[0], answer[1]);
+
+
+            answer = SumToTen_Fastest(testArray2, testArray2.Length);
+            
+            if (answer[0] >= 0 && answer[1] >= 0)
+                Console.WriteLine("[FASTEST][TA2] The values at indices {0} and {1} are the first pair that sum to 10", answer[0], answer[1]);
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey(); 
         }
@@ -95,7 +106,7 @@ namespace SumToTen
         /// This faster implementation performs binary search on the array to 
         /// find a pair of elements which sum to 10, then returns the "first pair"
         /// meaning the pair that ends with the lowest array index.
-        /// The time complexity of this function is O(n^2 logn)
+        /// The time complexity of this function is O(n logn)
         /// </summary>
         /// <param name="A"></param>
         /// <param name="size"></param>
@@ -116,7 +127,7 @@ namespace SumToTen
             Array.Sort(sortedArray); 
 
 
-            // This loop will iterate n times, so its total cost is O(n^2 logn)
+            // This loop will iterate n times, so its total cost is O(2n logn)
             for (i = 0; i < size; i++)
             {
                 // Get the index of the other number in the array such that A[i] + A[pairingNumber] = 10
@@ -178,7 +189,67 @@ namespace SumToTen
             return returnArray; 
         }
 
+        /// <summary>
+        /// This is the fastest implementation and is O(n). 
+        /// This implementation uses a hash table
+        /// </summary>
+        /// <param name="A"></param>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        public static int[] SumToTen_Fastest(int[] A, int size)
+        {
+            int[] returnArray = new int[2];
 
+            var validPairs = new Dictionary<int, int>();
+
+            int i = 0;
+
+            Hashtable hashTable = new Hashtable();
+
+            // Put all of the elements in a hash table, O(n)
+            for (i = 0; i < size; i++)
+            {
+                hashTable[A[i]] = i;        // key=element, value=index
+            }
+
+            // Iterate the elements looking for pairs which add to 10 
+            for (i = 0; i < size; i++)
+            {
+                if (hashTable.ContainsKey(10 - A[i]))
+                {
+                    // We found a pair 
+                    if (!validPairs.ContainsKey(i))
+                        validPairs.Add(i, (int)hashTable[10- A[i]]);
+                }
+            }
+
+            int finalLeft = 0;
+            int finalRight = size;
+
+            // Determine the "first pair", indicated by the lowest high index. 
+            foreach (var key in validPairs.Keys)
+            {
+                // Ignore duplicate entries (i.e., (1,3) = (3,1))
+                if (key > validPairs[key] || key == validPairs[key])
+                    continue;
+
+                var lowestIndex = Math.Min(key, validPairs[key]);
+                var highestIndex = Math.Max(key, validPairs[key]);
+
+                if (highestIndex < finalRight)
+                {
+                    finalRight = highestIndex;
+                    finalLeft = lowestIndex;
+
+                }
+
+            }
+
+            returnArray[0] = finalLeft;
+            returnArray[1] = finalRight;
+
+            return returnArray;
+        }
 
     }
 }
